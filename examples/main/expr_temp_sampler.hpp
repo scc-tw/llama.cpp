@@ -328,7 +328,7 @@ template <typename LHS, typename RHS> struct SamplerCompose {
         rhs.reset();
     }
 
-    static void print_chain() {}
+    std::string getName() const { return std::string(lhs.getName()) + " | " + std::string(rhs.getName()); }
 };
 
 // Overload operator| to compose sampler expressions.
@@ -351,7 +351,7 @@ class SamplerChain {
         }
     }
 
-    void print_chain() const {
+    void getName() const {
         std::cout << "Sampler Chain Units:\n";
         for (const auto & unit : units_) {
             std::cout << " - " << unit->getName() << "\n";
@@ -360,9 +360,9 @@ class SamplerChain {
 };
 
 // Print SamplerCompose chain.
-template <typename LHS, typename RHS> void print_chain(const SamplerCompose<LHS, RHS> & chain) {
+template <typename LHS, typename RHS> void getName(const SamplerCompose<LHS, RHS> & chain) {
     std::cout << "Sampler Chain Units:\n";
-    chain.print_chain();
+    std::cout << chain.getName() << std::endl;
 }
 
 //---------------------------------------------------------------------
@@ -374,9 +374,9 @@ struct CommonSamplingParams {
     static const int         token_eos          = 2;
     static const int         token_nl           = 10;
     static const int         last_n_tokens_size = 64;
-    static constexpr float   repeat_penalty     = 1.1f;
-    static constexpr float   frequency_penalty  = 0.5f;
-    static constexpr float   presence_penalty   = 0.3f;
+    static constexpr float   repeat_penalty     = 1.0f;
+    static constexpr float   frequency_penalty  = 0.0f;
+    static constexpr float   presence_penalty   = 0.0f;
     static const bool        penalize_nl        = true;
     static const int         seed               = 42;
     static const int         top_k              = 40;
@@ -450,7 +450,7 @@ struct expr_common_sampler {
     struct llama_sampler *                grmr;
     decltype(filter_stack_example_common) chain = filter_stack_example_common;
 
-    fixed_ring_buffer<llama_token, 64> prev;
+    fixed_ring_buffer<llama_token, 64> prev = {};
 
     std::vector<llama_token_data> cur;
 
@@ -476,6 +476,11 @@ struct expr_common_sampler {
     expr_common_sampler(const struct llama_model * model);
 
     llama_token sample(llama_context * ctx, int idx, bool grammar_first = false);
+
+    void accept(llama_token token) {
+        chain.accept(token);
+        prev.push_back(token);
+    }
 
     std::string prev_str(llama_context * ctx_main, int n);
 

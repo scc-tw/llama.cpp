@@ -471,7 +471,7 @@ int main(int argc, char ** argv) {
     // LOG_INF("sampler seed: %u\n",     common_sampler_get_seed(smpl));
     // LOG_INF("sampler params: \n%s\n", sparams.print().c_str());
     // LOG_INF("sampler chain: %s\n", common_sampler_print(smpl).c_str());
-    print_chain(my_sampler.chain);
+    getName(my_sampler.chain);
 
     LOG_INF("generate: n_ctx = %d, n_batch = %d, n_predict = %d, n_keep = %d\n", n_ctx, params.n_batch, params.n_predict, params.n_keep);
 
@@ -704,7 +704,7 @@ int main(int argc, char ** argv) {
             const llama_token id = my_sampler.sample(ctx, -1);
 
             // common_sampler_accept(smpl, id, /* accept_grammar= */ true);
-            my_sampler.chain.accept(id);
+            my_sampler.accept(id);
 
             embd.push_back(id);
 
@@ -724,7 +724,7 @@ int main(int argc, char ** argv) {
                 // push the prompt in the sampling context in order to apply repetition penalties later
                 // for the prompt, we don't apply grammar rules
                 // common_sampler_accept(smpl, embd_inp[n_consumed], /* accept_grammar= */ false);
-                my_sampler.chain.accept(embd_inp[n_consumed]);
+                my_sampler.accept(embd_inp[n_consumed]);
 
                 ++n_consumed;
                 if ((int) embd.size() >= params.n_batch) {
@@ -802,7 +802,7 @@ int main(int argc, char ** argv) {
                     LOG_DBG("found antiprompt: %s\n", last_output.c_str());
                 }
             }
-
+ 
             // deal with end of generation tokens in interactive mode
             if (!waiting_for_first_input && llama_vocab_is_eog(vocab, my_sampler.last())) {
                 LOG_DBG("found an EOG token\n");
